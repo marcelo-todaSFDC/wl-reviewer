@@ -119,8 +119,17 @@ Após receber os outputs dos 3 agentes, despache um **4º agente** com todos os 
 Com a tabela consolidada do Agente 4:
 
 1. **Exibir o resumo** ao usuário: veredito, bloqueadores críticos, pontos fortes
-2. **Perguntar** se quer salvar em Google Sheets (spreadsheet ID configurável) ou exportar como Markdown
-3. Se Google Sheets: usar `mcp__google-workspace__modify_sheet_values` para escrever — uma aba por artefato revisado, com cabeçalho padrão e coluna vazia `✍️ Parecer [Arquiteto]` para revisão humana
+2. **Gerar um arquivo Excel** (`.xlsx`) com openpyxl na mesma pasta do artefato revisado:
+   - Aba única com o nome do artefato (ex.: `O2P-Order-Cancellation`)
+   - Linha 1: título com o nome do artefato e o veredito
+   - Linha 2: path do arquivo revisado
+   - Linha 4: cabeçalho — `# | Seção / Linha | Trecho Original | 🔧 Arq. SF | 📡 Arq. TMF | 🏛️ Arq. TOGAF | ⚖️ Veredito CTO | Sev. | Ação sugerida | Owner | ✍️ Parecer [Arquiteto]`
+   - Linhas seguintes: um row por achado
+   - Coluna `✍️ Parecer` sempre vazia — para o arquiteto humano preencher
+   - Coluna `Sev.` com cor de fundo: 🔴 = vermelho claro, 🟡 = amarelo claro, 🟢 = verde claro
+   - Colunas de texto com wrap e largura adequada
+   - Nome do arquivo: `Revisao-<basename-do-md>.xlsx`
+3. Informar ao usuário o path do arquivo gerado e abri-lo se possível
 
 ## Glossário de referência rápida
 
