@@ -1,156 +1,158 @@
 ---
 name: review-o2p-flow
 description: >
-  Revisão arquitetural de um artefato O2P (flows-wiki) por 4 agentes especialistas em
-  paralelo: Arq. Técnico Salesforce Comms Cloud, Arq. Funcional TM Forum / eTOM / ODA,
-  Arq. Estratégico TOGAF, e Validação Cross / CTO. Produz uma tabela de achados com
-  Seção, Trecho Original, parecer de cada agente, veredito CTO, severidade e ação sugerida.
-  Use quando: revisar qualquer .md em architecture/flows-wiki/ antes de promover para curated.
-  Invoke: review-o2p-flow <caminho-relativo-ao-md>
+  Architectural review of an O2P (flows-wiki) artifact by 4 specialist agents in parallel:
+  Salesforce Comms Cloud Technical Architect, TM Forum / eTOM / ODA Functional Architect,
+  TOGAF Strategic Architect, and CTO Cross Validation. Produces a findings table with
+  Section, Original Text, each agent's observation, CTO verdict, severity, and suggested action.
+  Use when: reviewing any .md under architecture/flows-wiki/ before promoting to curated.
+  Invoke: review-o2p-flow <relative-path-to-md>
 ---
 
 # Skill: review-o2p-flow
 
-## Propósito
+## Purpose
 
-Executar revisão arquitetural estruturada de um artefato O2P antes da promoção para `status: curated`. Replica o método de 4 agentes usados na revisão inaugural (Order-Cancellation + MACD-Disconnect, agosto/2026) como processo repeatable e versionado.
+Run a structured architectural review of an O2P artifact before promotion to `status: curated`. Replicates the 4-agent method used in the inaugural review (Order-Cancellation + MACD-Disconnect, August 2026) as a repeatable, versioned process.
 
-## Pré-condições (leia antes de executar)
+## Pre-conditions (read before executing)
 
-Antes de invocar os agentes, leia obrigatoriamente:
+Before dispatching agents, read:
 
-1. `SOUL.md` — non-negotiables #7 e #8 (nunca sobrepor ADR em silêncio; registrar decisões não-óbvias)
-2. `architecture/flows-wiki/o2p/O2P.md` — canon do framework B2C white-label
-3. `architecture/decisions/013-order-closure-sequence-activate-ponr-billing.md` — sequência activate→PONR→billing; escopo: Alta e Cambio de Plan; bajas = open point (§9·3, §9·6)
-4. `architecture/decisions/014-dro-governed-fallout-two-lanes-by-ponr.md` — all-or-nothing; Partial-Fulfillment desabilitado no TO-BE Totalplay
-5. `architecture/decisions/015-core-master-of-commercial-asset-lifecycle.md` — Core SF é master do Asset comercial
+1. `SOUL.md` — non-negotiables #7 and #8 (never silently override an ADR; record non-obvious decisions)
+2. `architecture/flows-wiki/o2p/O2P.md` — B2C white-label framework canon
+3. `architecture/decisions/013-order-closure-sequence-activate-ponr-billing.md` — activate→PONR→billing sequence; scope: Alta and Cambio de Plan; bajas = open point (§9·3, §9·6)
+4. `architecture/decisions/014-dro-governed-fallout-two-lanes-by-ponr.md` — all-or-nothing; Partial-Fulfillment disabled in TO-BE
+5. `architecture/decisions/015-core-master-of-commercial-asset-lifecycle.md` — SF Core is master of commercial Asset
 6. `architecture/decisions/telco-009-order-configuration-efficiency-lean-decomposition.md` — Multi-Site OFF; B2C single-site
-7. O próprio MD alvo — leia na íntegra antes de despachar os agentes
+7. The target MD itself — read in full before dispatching agents
 
-## Execução
+> **Adapt ADR paths** if your project uses different numbering.
 
-### Passo 1 — Ler o artefato alvo
+## Execution
 
-Leia o MD informado. Extraia:
+### Step 1 — Read the target artifact
+
+Read the provided MD. Extract:
 - Frontmatter: `journey`, `step`, `movement`, `status`
-- Seções principais: Flow (Mermaid), Steps (tabela), Notes
-- Referências a outros fluxos (`[[...]]`), ADRs e TMF APIs citadas
+- Main sections: Flow (Mermaid), Steps (table), Notes
+- References to other flows (`[[...]]`), ADRs, and TMF APIs cited
 
-### Passo 2 — Despachar 3 agentes especialistas em paralelo
+### Step 2 — Dispatch 3 specialist agents in parallel
 
-Despache os 3 agentes simultaneamente via Agent tool. Cada um recebe o conteúdo completo do MD + os documentos de pré-condição relevantes ao seu domínio.
+Dispatch all 3 agents simultaneously via the Agent tool. Each receives the full MD content + the relevant pre-condition documents for their domain.
 
 ---
 
-#### Agente 1 — Arq. Técnico Salesforce Comms Cloud (DRO/SOM)
+#### Agent 1 — Salesforce Comms Cloud Technical Architect (DRO/SOM)
 
-**Persona:** Arquiteto técnico sênior de Salesforce Communications Cloud, especialista em DRO (Dynamic Revenue Orchestrator), SOM (Service Order Management), Comms Cloud OM, Apex e data model da plataforma.
+**Persona:** Senior Salesforce Communications Cloud Technical Architect, specialist in DRO (Dynamic Revenue Orchestrator), SOM (Service Order Management), Comms Cloud OM, Apex, and platform data model.
 
-**Missão:** Revisar o artefato sob a perspectiva de implementabilidade em Salesforce Comms Cloud:
-- Os SF Objects citados existem e são os corretos? (ex.: `FulfillmentRequest` ≠ `Service Order`)
-- Os passos do DRO são implementáveis como orchestration items / compensating actions?
-- Os estados do fluxo são testáveis (unit + integração)?
-- Há lógica de decomposição não-especificada que o DRO precisaria mas o artefato omite?
-- Há eventos TMF688 de retorno e timeout guards para estados assíncronos?
-- Consistência com ADR-013 (sequência activate→close→billing), ADR-014 (all-or-nothing), ADR-015 (Asset master)?
+**Mission:** Review the artifact from the perspective of implementability in Salesforce Comms Cloud:
+- Are the SF Objects cited real and correct? (e.g. `FulfillmentRequest` ≠ `Service Order`)
+- Are the DRO steps implementable as orchestration items / compensating actions?
+- Are the flow states testable (unit + integration)?
+- Is there decomposition logic the DRO needs but the artifact omits?
+- Are TMF688 return events and timeout guards present for async states?
+- Consistency with ADR-013 (activate→close→billing), ADR-014 (all-or-nothing), ADR-015 (Asset master)?
 
-**Output esperado:** lista de achados no formato:
+**Expected output:** list of findings in the format:
 ```
-SEÇÃO | TRECHO ORIGINAL | OBSERVAÇÃO | SEVERIDADE (🔴/🟡/🟢/⚪)
+SECTION | ORIGINAL TEXT | OBSERVATION | SEVERITY (🔴/🟡/🟢/⚪)
 ```
 
 ---
 
-#### Agente 2 — Arq. Funcional TM Forum / eTOM / ODA
+#### Agent 2 — TM Forum / eTOM / ODA Functional Architect
 
-**Persona:** Arquiteto funcional de telecomunicações, especialista em TM Forum (TMF Open APIs), eTOM v2, ODA (Open Digital Architecture) e modelos SID/Information Framework.
+**Persona:** Telecom functional architect, specialist in TM Forum Open APIs, eTOM v2, ODA (Open Digital Architecture), and SID/Information Framework models.
 
-**Missão:** Revisar o artefato sob a perspectiva de conformidade com padrões TM Forum:
-- O mapeamento eTOM no header está correto e completo? (verificar todos os processos L2 cobertos, não só o principal)
-- As TMF APIs citadas são as corretas para cada operação? (ex.: TMF676 = Payment, não Rating; TMF678 = Bill Management; TMF641 = Service Order; TMF639/652 = Resource)
-- Os estados TMF622 citados são canônicos? Ou são customizados sem declaração?
-- O fluxo modela corretamente o ciclo `orderItem.action` (add/delete/modify)?
-- Sub-estados internos do DRO estão claramente distinguidos de estados canônicos TMF?
-- O service order TMF641 emitido pelo DRO tem seu estado refletido corretamente no ciclo de vida?
-- Princípios ODA respeitados: vendor-neutral, event-driven, separação de camadas?
+**Mission:** Review the artifact from the perspective of TM Forum standards compliance:
+- Is the eTOM mapping in the header correct and complete? (verify ALL covered L2 processes, not just the primary one — Order Handling=1.3.3, SC&A=1.4.5, Bill/Invoice=1.1.1.x)
+- Are the TMF APIs cited correct for each operation? (TMF676=Payment capture, NOT rating; TMF678=Bill Management with calculation; TMF641=Service Order emitted by DRO)
+- Are the TMF622 states cited canonical? Or custom without declaration?
+- Is the `orderItem.action` cycle modeled correctly (add/delete/modify)?
+- Are DRO internal sub-states clearly distinguished from canonical TMF641 states?
+- Is the emitted TMF641 Service Order lifecycle correctly reflected?
+- ODA principles respected: vendor-neutral, event-driven, layer separation?
 
-**Output esperado:** lista de achados no mesmo formato acima.
-
----
-
-#### Agente 3 — Arq. Estratégico TOGAF / Governança
-
-**Persona:** Arquiteto estratégico, especialista em TOGAF ADM (4 domínios: Business/Data/Application/Technology), Architecture Repository, rastreabilidade de requisitos e governança de ADRs.
-
-**Missão:** Revisar o artefato sob a perspectiva de governança e completude arquitetural:
-- Decisões não-triviais assumidas sem ADR? (SOUL #7 e #8)
-- Referências a ADRs existentes nas notas? (rastreabilidade)
-- Contradições com ADRs vigentes? (especialmente ADR-013 §9·3/§9·6 para PONR de bajas)
-- Cobertura dos 4 domínios TOGAF no artefato?
-- Vocabulário consistente com o canon? Termos ambíguos ou sobrecarregados?
-- Concerns de segurança, retenção de dados ou compliance ausentes? (verificar HIGH-LEVEL-SECURITY se o fluxo toca visibilidade de objetos ou fechamento de conta)
-- Artefatos cruzados (T2C.md, R2C.md) em conflito com o que este fluxo afirma?
-
-**Output esperado:** lista de achados no mesmo formato acima.
+**Expected output:** list of findings in the same format above.
 
 ---
 
-### Passo 3 — Agente Cross / Validação CTO
+#### Agent 3 — TOGAF Strategic Architect / Governance
 
-Após receber os outputs dos 3 agentes, despache um **4º agente** com todos os achados consolidados.
+**Persona:** Strategic architect, specialist in TOGAF ADM (4 domains: Business/Data/Application/Technology), Architecture Repository, requirements traceability, and ADR governance.
 
-**Persona:** CTO / Arquiteto Cross — visão sistêmica, sem viés de domínio. Papel: árbitro e sintetizador.
+**Mission:** Review the artifact from the perspective of governance and architectural completeness:
+- Non-trivial decisions assumed without an ADR? (SOUL #7 and #8). SPECIAL ATTENTION: if the flow defines PONR for bajas (MACD-DELETE), verify a dedicated ADR exists — ADR-013 §9·6 and ADR-014 §9·3 declare bajas as an open point.
+- ADR references present in the notes? (traceability)
+- Contradictions with existing ADRs?
+- Coverage of all 4 TOGAF domains in the artifact?
+- Vocabulary consistent with the canon? Ambiguous or semantically overloaded terms?
+- Security, data retention, or LGPD compliance concerns missing? (especially in flows that close accounts or retire assets)
+- Cross-flow conflicts with T2C.md, R2C.md, or other artifacts?
 
-**Missão:**
-1. Para cada achado dos 3 agentes: confirmar, moderar ou refutar — com justificativa baseada nos documentos de pré-condição (não em opinião)
-2. Elevar severity se 2+ agentes convergem no mesmo problema
-3. Rebaixar severity se o achado conflita com o que os ADRs estabelecem (ex.: agente confunde activation com PONR — refutar citando ADR-013)
-4. Identificar achados cruzados entre agentes que se complementam
-5. Produzir veredito final: **GO**, **GO-CONDICIONAL** ou **NO-GO** com os bloqueadores listados
-
-**Output esperado:**
-- Tabela consolidada: `# | Seção | Trecho Original | Arq.SF | Arq.TMF | Arq.TOGAF | Veredito CTO | Sev. Final | Ação Sugerida | Owner`
-- Veredito geral com justificativa
+**Expected output:** list of findings in the same format above.
 
 ---
 
-### Passo 4 — Produzir output final
+### Step 3 — CTO Cross Validation
 
-Com a tabela consolidada do Agente 4:
+After receiving the 3 agents' outputs, dispatch a **4th agent** with all consolidated findings.
 
-1. **Exibir o resumo** ao usuário: veredito, bloqueadores críticos, pontos fortes
-2. **Gerar um arquivo Excel** (`.xlsx`) com openpyxl na mesma pasta do artefato revisado:
-   - Aba única com o nome do artefato (ex.: `O2P-Order-Cancellation`)
-   - Linha 1: título com o nome do artefato e o veredito
-   - Linha 2: path do arquivo revisado
-   - Linha 4: cabeçalho — `# | Seção / Linha | Trecho Original | 🔧 Arq. SF | 📡 Arq. TMF | 🏛️ Arq. TOGAF | ⚖️ Veredito CTO | Sev. | Ação sugerida | Owner | ✍️ Parecer [Arquiteto]`
-   - Linhas seguintes: um row por achado
-   - Coluna `✍️ Parecer` sempre vazia — para o arquiteto humano preencher
-   - Coluna `Sev.` com cor de fundo: 🔴 = vermelho claro, 🟡 = amarelo claro, 🟢 = verde claro
-   - Colunas de texto com wrap e largura adequada
-   - Nome do arquivo: `Revisao-<basename-do-md>.xlsx`
-3. Informar ao usuário o path do arquivo gerado e abri-lo se possível
+**Persona:** CTO / Cross Architect — systemic view, no domain bias. Role: arbiter and synthesizer.
 
-## Glossário de referência rápida
+**Mission:**
+1. For each finding from the 3 agents: confirm, moderate, or refute — with justification based on the reference documents (not opinion)
+2. Escalate severity if 2+ agents converge on the same problem
+3. Downgrade severity if the finding conflicts with what the ADRs establish (e.g. agent confuses activation with PONR — refute citing ADR-013)
+4. Identify complementary cross-agent findings and consolidate them
+5. Produce final verdict: **GO**, **GO-CONDITIONAL**, or **NO-GO** with blockers listed
 
-| Termo | Significado |
-|-------|------------|
-| PONR | Point of No Return = fechamento da work order (não a ativação) |
-| DRO | Dynamic Revenue Orchestrator — orquestra o O2P, emite UM TMF641 |
-| SOM | Service Order Management — executa fora do core |
-| SVA | Serviço de Valor Agregado = add-on (ex.: TV extra, antivírus) |
-| ONT/CPE | Optical Network Terminal / Customer Premises Equipment = equipamento físico no cliente |
-| ETF | Early Termination Fee = multa por rescisão antecipada |
+**Expected output:**
+- Consolidated table: `# | Section | Original Text | SF Arch | TMF Arch | TOGAF Arch | CTO Verdict | Final Sev | Suggested Action | Owner`
+- Overall verdict with justification
+
+---
+
+### Step 4 — Produce final output
+
+With the consolidated table from Agent 4:
+
+1. **Display the summary** to the user: verdict, critical blockers, strengths
+2. **Generate an Excel file** (`.xlsx`) using openpyxl in the same folder as the reviewed artifact:
+   - Single sheet named after the artifact (e.g. `O2P-Order-Cancellation`)
+   - Row 1: title with artifact name and verdict
+   - Row 2: path of the reviewed file
+   - Row 4: header — `# | Section / Line | Original Text | 🔧 SF Arch | 📡 TMF Arch | 🏛️ TOGAF Arch | ⚖️ CTO Verdict | Sev | Suggested Action | Owner | ✍️ [Architect] Review`
+   - Following rows: one row per finding
+   - `✍️ Review` column always empty — for the human architect to fill in
+   - `Sev` column with background color: 🔴 = light red, 🟡 = light yellow, 🟢 = light green
+   - Text columns with wrap and adequate width
+   - File name: `Review-<md-basename>.xlsx`
+3. Inform the user of the generated file path and open it if possible
+
+## Quick glossary
+
+| Term | Meaning |
+|------|---------|
+| PONR | Point of No Return = work order closure (not service activation) |
+| DRO | Dynamic Revenue Orchestrator — orchestrates O2P, emits ONE TMF641 |
+| SOM | Service Order Management — executes outside the core |
+| SVA | Value-Added Service = add-on (e.g. extra TV, antivirus) |
+| ONT/CPE | Optical Network Terminal / Customer Premises Equipment |
+| ETF | Early Termination Fee |
 | TMF622 | Product Order Management API |
-| TMF641 | Service Order Management API — emitido pelo DRO |
-| TMF639/652 | Resource Inventory / Resource Order — externo, SOM-interno |
+| TMF641 | Service Order Management API — emitted by DRO |
+| TMF639/652 | Resource Inventory / Resource Order — external, SOM-internal |
 | TMF640 | Service Activation API |
-| TMF637/638 | Product Inventory / Service Inventory — assetização |
-| TMF666/678 | Account Management / Customer Bill Management — billing |
-| TMF676 | Payment Management — captura de pagamento e refund |
-| TMF688 | Event Management — notificações assíncronas |
-| TMF646 | Appointment Management — agendamento de visita técnica |
-| eTOM 1.3.3 | Order Handling (processo L2 principal) |
-| eTOM 1.4.5 | Service Config & Activation (delegado para deactivate/recover) |
-| Cancel-Replace | Modelo Comms Cloud OM onde nova ordem supersede a original |
-| FulfillmentRequest | Objeto SF que materializa o TMF641 (Service Order) |
+| TMF637/638 | Product Inventory / Service Inventory (assetization) |
+| TMF666/678 | Account Management / Customer Bill Management (billing) |
+| TMF676 | Payment Management — payment capture and refund |
+| TMF688 | Event Management — async notifications |
+| TMF646 | Appointment Management — field visit scheduling |
+| eTOM 1.3.3 | Order Handling (primary L2 process) |
+| eTOM 1.4.5 | Service Config & Activation (delegated for deactivate/recover only) |
+| Cancel-Replace | Comms Cloud OM model where a new order supersedes the original |
+| FulfillmentRequest | Salesforce object that materializes TMF641 (Service Order) |
