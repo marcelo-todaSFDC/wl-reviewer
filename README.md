@@ -1,102 +1,82 @@
 # wl-reviewer
 
-> Revisão arquitetural de artefatos O2P por 4 agentes especialistas em paralelo.
+> Architectural review of O2P flow artifacts using 4 specialist agents in parallel.
 
-Uma skill para [Claude Code](https://claude.ai/code) que replica o processo de revisão de fluxos de negócio White Label por múltiplos arquitetos — de forma automatizada, estruturada e repetível.
-
----
-
-## O que faz
-
-Dado um artefato `.md` de fluxo O2P (Order-to-Payment), a skill despacha **3 agentes especialistas em paralelo** e um **árbitro CTO** que consolida e veredicta:
-
-| Agente | Perspectiva |
-|--------|-------------|
-| 🔧 Arq. Técnico Salesforce | Implementabilidade em Comms Cloud — DRO, SOM, SF Objects, testabilidade |
-| 📡 Arq. Funcional TM Forum | Conformidade com TMF Open APIs, eTOM v2, ODA, estados canônicos |
-| 🏛️ Arq. Estratégico TOGAF | Governança de ADRs, rastreabilidade, vocabulário, concerns de compliance |
-| ⚖️ Validação CTO | Árbitro cross — confirma, modera ou refuta cada achado com base nos documentos de referência |
-
-**Output:** tabela de achados com trecho original, observação por agente, veredito CTO, severidade (🔴/🟡/🟢) e ação sugerida — com coluna vazia para o 5º arquiteto humano preencher.
-
-**Veredito final:** `GO` · `GO-CONDICIONAL` · `NO-GO`
+A [Claude Code](https://claude.ai/code) skill that automates the review of O2P (Order-to-Payment) business flow `.md` files — structured, repeatable, and multi-perspective.
 
 ---
 
-## Pré-requisitos
+## What it does
 
-- [Claude Code](https://claude.ai/code) com acesso ao projeto ADP
-- Repo ADP clonado com as ADRs de referência (`architecture/decisions/`)
-- Artefato `.md` no formato `flows-wiki` com frontmatter, diagrama Mermaid, tabela de Steps e Notes
+Given an O2P flow artifact, the skill dispatches **3 specialist agents in parallel** followed by a **CTO arbiter** that consolidates and verdicts:
+
+| Agent | Perspective |
+|-------|-------------|
+| 🔧 Salesforce Technical Architect | Comms Cloud implementability — DRO, SOM, SF Objects, testability |
+| 📡 TM Forum Functional Architect | TMF Open API compliance, eTOM v2, ODA, canonical states |
+| 🏛️ TOGAF Strategic Architect | ADR governance, traceability, vocabulary, compliance concerns |
+| ⚖️ CTO Validation | Cross arbiter — confirms, moderates, or refutes each finding against reference documents |
+
+**Output:** an Excel file with the original text, each architect's observation, CTO verdict, severity (🔴/🟡/🟢), suggested action — and an empty column for the 5th human architect to fill in.
+
+**Final verdict:** `GO` · `GO-CONDITIONAL` · `NO-GO`
 
 ---
 
-## Instalação
+## Requirements
 
-Copie o arquivo da skill para a pasta `.claude/skills/` do seu projeto ADP:
+- [Claude Code](https://claude.ai/code) with access to the ADP project
+- ADP repo cloned with reference ADRs under `architecture/decisions/`
+- Flow artifact `.md` in `flows-wiki` format with frontmatter, Mermaid diagram, Steps table, and Notes
+
+---
+
+## Installation
+
+Copy the skill file to the `.claude/skills/` folder of your ADP project:
 
 ```bash
-cp review-o2p-flow.md <seu-projeto>/.claude/skills/
+cp review-o2p-flow.md <your-project>/.claude/skills/
 ```
 
-A skill será descoberta automaticamente pelo Claude Code na próxima sessão.
+Claude Code will discover it automatically on the next session.
 
 ---
 
-## Como usar
+## Usage
 
-No Claude Code, dentro do projeto ADP:
+Inside Claude Code, from your ADP project:
 
 ```
 /review-o2p-flow architecture/flows-wiki/o2p/O2P-Fulfillment.md
 ```
 
-Ou para um artefato fora do diretório padrão:
+---
 
-```
-/review-o2p-flow /caminho/absoluto/para/MeuFluxo.md
-```
+## What the skill reads before reviewing
+
+The skill automatically loads the following reference documents from your project before dispatching the agents:
+
+- `SOUL.md` — architectural non-negotiables (#7: never silently override an ADR; #8: record non-obvious decisions)
+- `architecture/flows-wiki/o2p/O2P.md` — B2C white-label framework canon
+- Relevant project ADRs (013, 014, 015, telco-009)
+
+> **Adapt the ADR paths** in the skill if your project uses different numbering.
 
 ---
 
-## O que a skill lê antes de revisar
+## Quick glossary
 
-A skill carrega automaticamente os seguintes documentos de referência do seu projeto antes de despachar os agentes:
-
-- `SOUL.md` — non-negotiables arquiteturais (#7: nunca sobrepor ADR; #8: registrar decisões não-óbvias)
-- `architecture/flows-wiki/o2p/O2P.md` — canon do framework B2C white-label
-- ADRs relevantes do projeto (013, 014, 015, telco-009)
-
-> **Adapte os paths das ADRs** na skill se o seu projeto usar numeração diferente.
-
----
-
-## Exemplo de output
-
-```
-Veredito: GO-CONDICIONAL
-Bloqueadores: nenhum crítico
-Achados: 10 itens (2 🔴 · 5 🟡 · 3 🟢)
-
-| # | Seção | Trecho Original | 🔧 SF | 📡 TMF | 🏛️ TOGAF | ⚖️ CTO | Sev. | Ação | Owner | ✍️ Você |
-|---|-------|----------------|-------|--------|----------|--------|------|------|-------|---------|
-| 1 | Notes / linha 64 | "Entry points: ...Partial-Fulfillment..." | ... | ... | 🔴 Contradiz ADR-014 | CONFIRMO | 🔴 | Remover entry-point | TA+SA | |
-```
-
----
-
-## Glossário rápido
-
-| Termo | Significado |
-|-------|------------|
-| PONR | Point of No Return = fechamento da work order (não a ativação) |
-| DRO | Dynamic Revenue Orchestrator — orquestra o O2P, emite UM TMF641 |
-| SOM | Service Order Management — executa fora do core |
-| SVA | Serviço de Valor Agregado = add-on |
-| ETF | Early Termination Fee = multa por rescisão antecipada |
-| FulfillmentRequest | Objeto Salesforce que materializa o TMF641 |
+| Term | Meaning |
+|------|---------|
+| PONR | Point of No Return = work order closure (not service activation) |
+| DRO | Dynamic Revenue Orchestrator — orchestrates O2P, emits ONE TMF641 |
+| SOM | Service Order Management — executes outside the core |
+| SVA | Value-Added Service = add-on |
+| ETF | Early Termination Fee |
+| FulfillmentRequest | Salesforce object that materializes TMF641 (Service Order) |
 | TMF622/641/640 | Product Order / Service Order / Activation APIs |
-| TMF637/638 | Product/Service Inventory (assetização) |
+| TMF637/638 | Product/Service Inventory (assetization) |
 | TMF666/678 | Account/Bill Management (billing) |
 | TMF676 | Payment Management |
 | TMF688 | Event Management |
@@ -104,10 +84,10 @@ Achados: 10 itens (2 🔴 · 5 🟡 · 3 🟢)
 
 ---
 
-## Licença
+## License
 
-MIT — use, adapte e compartilhe.
+MIT — use, adapt, and share.
 
 ---
 
-*Criado como parte do método [ADP — Agentic Delivery Platform](https://github.com/p-amers-mx-totalplay-ari/adp) para revisão arquitetural de fluxos Salesforce/TMF.*
+*Built as part of the [ADP — Agentic Delivery Platform](https://github.com/p-amers-mx-totalplay-ari/adp) method for Salesforce/TMF architectural flow reviews.*
